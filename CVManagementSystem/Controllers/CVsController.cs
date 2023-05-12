@@ -23,13 +23,31 @@ namespace CVManagementSystem.Controllers
 
         // GET: api/CVs
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CV>>> GetCvs()
+        public async Task<ActionResult<IEnumerable<CV>>> GetCvs(int minimumGCSE = 0, string? professionalQualification = null, 
+            string? educationQualification = null, string? educationLevel = null, int years = 0, string? experience = null, 
+            string? skills = null, string? keyword = null)
         {
-          if (_context.Cvs == null)
-          {
-              return NotFound();
-          }
-            return await _context.Cvs.ToListAsync();
+            if (_context.Cvs == null)
+            {
+                return NotFound();
+            }
+            var allCvs =  _context.Cvs;
+            var query = allCvs.AsQueryable();
+            if (allCvs != null)
+            {
+                if (minimumGCSE > 0)
+                    query.Where(x => x.GCSEPasses >= minimumGCSE);
+                if (!String.IsNullOrEmpty(professionalQualification))
+                {
+                    query.Where(x => (x.ProfessionalQualification1 != null && x.ProfessionalQualification1.Contains(professionalQualification))
+                        || (x.ProfessionalQualification2 != null && x.ProfessionalQualification2.Contains(professionalQualification))
+                        || (x.ProfessionalQualification3 != null && x.ProfessionalQualification3.Contains(professionalQualification))
+                        );
+                }
+                if (minimumGCSE > 0)
+                    query.Where(x => x.GCSEPasses >= minimumGCSE);
+            }
+            return await query.ToListAsync();
         }
 
         // GET: api/CVs/5

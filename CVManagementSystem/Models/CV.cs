@@ -24,12 +24,14 @@ namespace CVManagementSystem.Models
         public string? AddressLine3 { get; set; }
         public string? City { get; set; }
         public string? EducationLevel { get; set; }
-        public int? EducationQualification { get; set; }
+        public string? EducationQualification { get; set; }
         public int? ExperienceYears { get; set; }
         public int? GCSEPasses { get; set; }
         public string? ProfessionalQualification1 { get; set; }
         public string? ProfessionalQualification2 { get; set; }
         public string? ProfessionalQualification3 { get; set; }
+        public string? Skills { get; set; }
+        public bool IsRemote { get; set; } = true;
         public string? Photo { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime ModifiedDate { get; set; }

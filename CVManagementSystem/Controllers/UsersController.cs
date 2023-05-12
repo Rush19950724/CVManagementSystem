@@ -9,6 +9,7 @@ using CVManagementSystem.Data;
 using CVManagementSystem.Models;
 using System.Security.Cryptography;
 using System.Text;
+using System.Reflection.Metadata.Ecma335;
 
 namespace CVManagementSystem.Controllers
 {
@@ -27,15 +28,33 @@ namespace CVManagementSystem.Controllers
             _context = context;
         }
 
-        // GET: api/Users
+        [Route("login")]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        public async Task<ActionResult<IEnumerable<User>>> GetUser(string email, string password)
         {
-          if (_context.Users == null)
-          {
-              return NotFound();
-          }
-            return await _context.Users.ToListAsync();
+
+            if (_context.Users == null)
+            {
+                return NotFound();
+            }
+            if (UserExistsByEmail(email))
+            {
+
+                var user = _context.Users.Where(e => e.Email == email).FirstOrDefault();
+                if (VerifyPassword(password, user.HashValue, Convert.FromBase64String(user.SaltValue)))
+                {
+                    return CreatedAtAction("GetUser", new { id = user.ID }, user);
+                }
+                else
+                {
+                    return Problem("Wrong Password!");
+                }
+            }
+
+            else
+            {
+                return NotFound();
+            }
         }
 
         // GET: api/Users/5
@@ -55,6 +74,7 @@ namespace CVManagementSystem.Controllers
 
             return user;
         }
+
 
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -106,7 +126,8 @@ namespace CVManagementSystem.Controllers
                 HashValue = HashPasword(password, out saltValue),
                 SaltValue = Convert.ToBase64String(saltValue),
                 CreatedDate = DateTime.Now,
-                RoleID = _context.Roles.Where(e => e.Name == "User").FirstOrDefault().ID
+                RoleID = _context.Roles.Where(e => e.Name == "User").FirstOrDefault().ID,
+                StatusID = _context.CVStatusTypes.Where(e => e.Name == "Active").FirstOrDefault()?.ID
             };
             
             _context.Users.Add(user);

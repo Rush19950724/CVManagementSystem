@@ -4,6 +4,7 @@ using CVManagementSystem.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CVManagementSystem.Migrations
 {
     [DbContext(typeof(CVContext))]
-    partial class CVContextModelSnapshot : ModelSnapshot
+    [Migration("20230511174307_CVandUserNullValueFix")]
+    partial class CVandUserNullValueFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,9 +45,6 @@ namespace CVManagementSystem.Migrations
                     b.Property<string>("Age")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("CVCollectionID")
-                        .HasColumnType("int");
-
                     b.Property<string>("City")
                         .HasColumnType("nvarchar(max)");
 
@@ -54,8 +54,8 @@ namespace CVManagementSystem.Migrations
                     b.Property<string>("EducationLevel")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("EducationQualification")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("EducationQualification")
+                        .HasColumnType("int");
 
                     b.Property<int?>("ExperienceYears")
                         .HasColumnType("int");
@@ -65,9 +65,6 @@ namespace CVManagementSystem.Migrations
 
                     b.Property<int?>("GCSEPasses")
                         .HasColumnType("int");
-
-                    b.Property<bool>("IsRemote")
-                        .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .HasColumnType("nvarchar(max)");
@@ -90,9 +87,6 @@ namespace CVManagementSystem.Migrations
                     b.Property<int>("SectorID")
                         .HasColumnType("int");
 
-                    b.Property<string>("Skills")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("StatusID")
                         .HasColumnType("int");
 
@@ -103,8 +97,6 @@ namespace CVManagementSystem.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("ID");
-
-                    b.HasIndex("CVCollectionID");
 
                     b.ToTable("CV", (string)null);
                 });
@@ -130,7 +122,12 @@ namespace CVManagementSystem.Migrations
                     b.Property<DateTime>("ModifiedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("userID")
+                        .HasColumnType("int");
+
                     b.HasKey("ID");
+
+                    b.HasIndex("userID");
 
                     b.ToTable("CVCollection", (string)null);
                 });
@@ -274,16 +271,15 @@ namespace CVManagementSystem.Migrations
                     b.ToTable("UserStatus", (string)null);
                 });
 
-            modelBuilder.Entity("CVManagementSystem.Models.CV", b =>
-                {
-                    b.HasOne("CVManagementSystem.Models.CVCollection", null)
-                        .WithMany("cvs")
-                        .HasForeignKey("CVCollectionID");
-                });
-
             modelBuilder.Entity("CVManagementSystem.Models.CVCollection", b =>
                 {
-                    b.Navigation("cvs");
+                    b.HasOne("CVManagementSystem.Models.User", "user")
+                        .WithMany()
+                        .HasForeignKey("userID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("user");
                 });
 #pragma warning restore 612, 618
         }

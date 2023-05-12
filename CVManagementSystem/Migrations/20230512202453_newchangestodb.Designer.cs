@@ -4,6 +4,7 @@ using CVManagementSystem.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CVManagementSystem.Migrations
 {
     [DbContext(typeof(CVContext))]
-    partial class CVContextModelSnapshot : ModelSnapshot
+    [Migration("20230512202453_newchangestodb")]
+    partial class newchangestodb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,6 +42,9 @@ namespace CVManagementSystem.Migrations
                     b.Property<string>("Age")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("CVCollectionID")
+                        .HasColumnType("int");
+
                     b.Property<string>("City")
                         .HasColumnType("nvarchar(max)");
 
@@ -61,6 +67,7 @@ namespace CVManagementSystem.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("GCSEPasses")
@@ -73,6 +80,7 @@ namespace CVManagementSystem.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("LastName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("ModifiedDate")
@@ -112,6 +120,8 @@ namespace CVManagementSystem.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("CVCollectionID");
 
                     b.ToTable("CV", (string)null);
                 });
@@ -279,6 +289,18 @@ namespace CVManagementSystem.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("UserStatus", (string)null);
+                });
+
+            modelBuilder.Entity("CVManagementSystem.Models.CV", b =>
+                {
+                    b.HasOne("CVManagementSystem.Models.CVCollection", null)
+                        .WithMany("cvs")
+                        .HasForeignKey("CVCollectionID");
+                });
+
+            modelBuilder.Entity("CVManagementSystem.Models.CVCollection", b =>
+                {
+                    b.Navigation("cvs");
                 });
 #pragma warning restore 612, 618
         }

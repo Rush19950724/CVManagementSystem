@@ -12,7 +12,6 @@ namespace CVManagementSystem.Models
         public int CreatedBy { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime ModifiedDate { get; set; }
-        public List<CV>? cvs { get; set; }
 
     }
 }

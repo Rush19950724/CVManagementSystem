@@ -1,4 +1,5 @@
 using CVManagementSystem.Data;
+using CVManagementSystem.Middleware;
 using CVManagementSystem.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -41,7 +42,7 @@ app.UseSwagger(options =>
 });
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
+app.UseMiddleware<ApiKeyMiddleware>();
 app.UseRouting();
 
 

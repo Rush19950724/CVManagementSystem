@@ -30,12 +30,12 @@ namespace CVManagementSystem.Controllers
 
         [Route("login")]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUser(string email, string password)
+        public IResult GetUser(string email, string password)
         {
 
             if (_context.Users == null)
             {
-                return NotFound();
+                return Results.NotFound();
             }
             if (UserExistsByEmail(email))
             {
@@ -43,68 +43,71 @@ namespace CVManagementSystem.Controllers
                 var user = _context.Users.Where(e => e.Email == email).FirstOrDefault();
                 if (VerifyPassword(password, user.HashValue, Convert.FromBase64String(user.SaltValue)))
                 {
-                    return CreatedAtAction("GetUser", new { id = user.ID }, user);
+                    return Results.Ok(user);
                 }
                 else
                 {
-                    return Problem("Wrong Password!");
+                    return Results.BadRequest("Wrong Password!");
                 }
             }
 
             else
             {
-                return NotFound();
+                return Results.NotFound();
             }
         }
 
         // GET: api/Users/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public IResult GetUser(int id)
         {
           if (_context.Users == null)
           {
-              return NotFound();
+              return Results.NotFound();
           }
-            var user = await _context.Users.FindAsync(id);
+            var activeStatus = _context.UserStatuses.Where(e => e.Name == "Active").FirstOrDefault().ID;
+            var user = _context.Users.Where(x=>x.ID==id && x.StatusID == activeStatus);
 
             if (user == null)
             {
-                return NotFound();
+                return Results.NotFound("User not exists!");
             }
 
-            return user;
+            return Results.Ok(user);
         }
 
 
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id, User user)
+        public IResult PutUser(int id, string password=null, string status = null)
         {
-            if (id != user.ID)
+            if (!UserExists(id))
             {
-                return BadRequest();
+                return Results.BadRequest("User not exists!");
             }
-
-            _context.Entry(user).State = EntityState.Modified;
-
-            try
+            else
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(id))
+                var activeStatus = _context.UserStatuses.Where(e => e.Name == "Active").FirstOrDefault().ID;
+                var user = _context.Users.Where(x => x.ID == id && x.StatusID==activeStatus).FirstOrDefault();
+                byte[] saltValue;
+                if (String.IsNullOrEmpty(password))
                 {
-                    return NotFound();
+                    user.HashValue = HashPasword(password, out saltValue);
+                    user.SaltValue = Convert.ToBase64String(saltValue);
                 }
-                else
+                user.LastModifiedDate = DateTime.Now;
+                if (string.IsNullOrEmpty(status))
                 {
-                    throw;
+                    var newStatus = _context.UserStatuses.Where(e => e.Name == status).FirstOrDefault();
+                        if(newStatus!=null)
+                        user.StatusID= newStatus.ID;
                 }
+                _context.Entry(user).State = EntityState.Modified;
+                _context.SaveChangesAsync();
+                return Results.Ok(user);
             }
-
-            return NoContent();
+            return Results.NoContent();
         }
 
         // POST: api/Users
@@ -126,8 +129,9 @@ namespace CVManagementSystem.Controllers
                 HashValue = HashPasword(password, out saltValue),
                 SaltValue = Convert.ToBase64String(saltValue),
                 CreatedDate = DateTime.Now,
+                LastModifiedDate = DateTime.Now,
                 RoleID = _context.Roles.Where(e => e.Name == "User").FirstOrDefault().ID,
-                StatusID = _context.CVStatusTypes.Where(e => e.Name == "Active").FirstOrDefault()?.ID
+                StatusID = _context.UserStatuses.Where(e => e.Name == "Active").FirstOrDefault().ID
             };
             
             _context.Users.Add(user);
@@ -149,7 +153,6 @@ namespace CVManagementSystem.Controllers
             {
                 return NotFound();
             }
-
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
 
@@ -163,7 +166,8 @@ namespace CVManagementSystem.Controllers
 
         private bool UserExistsByEmail(string email)
         {
-            return (_context.Users?.Any(e => e.Email == email)).GetValueOrDefault();
+            var active = _context.UserStatuses.Where(e => e.Name == "Active").FirstOrDefault();
+            return (_context.Users?.Any(e => e.Email == email && e.StatusID == active.ID)).GetValueOrDefault();
         }
         string HashPasword(string password, out byte[] salt)
         {
